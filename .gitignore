@@ -1,0 +1,70 @@
+# === SEGURIDAD Y CONFIGURACIÓN ===
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+
+# === SISTEMA OPERATIVO ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# === EDITORES DE CÓDIGO ===
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# === DEPENDENCIAS ===
+node_modules/
+jspm_packages/
+web_modules/
+vendor/
+.venv/
+venv/
+ENV/
+env/
+lib/
+lib64/
+
+# === COMPILACIÓN Y ARCHIVOS GENERADOS ===
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+bower_components/
+target/
+*.exe
+*.dll
+*.so
+*.dmg
+*.iso
+
+# === REGISTROS Y TEMPORALES ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.eslintcache
+.stylelintcache
+*.pid
+*.seed
+*.pid.lock
