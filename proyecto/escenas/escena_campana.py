@@ -1,4 +1,3 @@
-"""Escena de campaña con tres niveles secuenciales y pausado opcional."""
 
 from __future__ import annotations
 
