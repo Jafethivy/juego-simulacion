@@ -64,7 +64,6 @@ class EscenaInformacion:
         texto_objetivo = [
             "Destruye meteoritos: +10 pts",
             "Esquiva sin impacto: +5 pts",
-            "Cada nivel dura 60 segundos.",
             "Iniciales: 3 primeras letras.",
         ]
         for indice, linea in enumerate(texto_objetivo):

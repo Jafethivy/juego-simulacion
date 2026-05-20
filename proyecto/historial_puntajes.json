@@ -1,5 +1,13 @@
 [
   {
+    "iniciales": "BBB",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "victoria_j2",
+    "puntaje": 370,
+    "fecha": "2026-05-20 07:04"
+  },
+  {
     "iniciales": "SDD",
     "modo": "campana",
     "categoria": "campana",
@@ -8,43 +16,35 @@
     "fecha": "2026-05-19 23:29"
   },
   {
-    "iniciales": "IVT",
+    "iniciales": "NET",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "victoria_j1",
+    "puntaje": 270,
+    "fecha": "2026-05-20 08:06"
+  },
+  {
+    "iniciales": "NET",
     "modo": "campana",
     "categoria": "campana",
     "resultado": "derrota",
-    "puntaje": 180,
-    "fecha": "2026-05-19 18:53"
+    "puntaje": 270,
+    "fecha": "2026-05-20 08:05"
   },
   {
-    "iniciales": "IVT",
-    "modo": "campana",
-    "categoria": "campana",
-    "resultado": "derrota",
-    "puntaje": 125,
-    "fecha": "2026-05-19 18:52"
-  },
-  {
-    "iniciales": "IVT",
-    "modo": "campana",
-    "categoria": "campana",
-    "resultado": "derrota",
-    "puntaje": 45,
-    "fecha": "2026-05-19 19:34"
-  },
-  {
-    "iniciales": "CAR",
+    "iniciales": "AAA",
     "modo": "vs",
     "categoria": "vs",
     "resultado": "victoria_j2",
-    "puntaje": 20,
-    "fecha": "2026-05-19 18:43"
+    "puntaje": 270,
+    "fecha": "2026-05-20 07:04"
   },
   {
-    "iniciales": "IVT",
-    "modo": "vs",
-    "categoria": "vs",
-    "resultado": "victoria_j2",
-    "puntaje": 20,
-    "fecha": "2026-05-19 18:43"
+    "iniciales": "ASD",
+    "modo": "campana",
+    "categoria": "campana",
+    "resultado": "derrota",
+    "puntaje": 235,
+    "fecha": "2026-05-20 07:15"
   }
 ]
