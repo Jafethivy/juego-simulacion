@@ -47,11 +47,13 @@ class BucleJuego:
         if nombre == "escena_iniciales":
             if str(datos.get("modo", "campana")) == "vs_infinito":
                 return EscenaIniciales(self.entrada, "vs_infinito", None, int(datos.get("cantidad_jugadores", 2)))
+            if str(datos.get("modo", "campana")) == "vs_imposible":
+                return EscenaIniciales(self.entrada, "vs_imposible", None, int(datos.get("cantidad_jugadores", 2)))
             return EscenaIniciales(self.entrada, str(datos.get("modo", "campana")), str(datos.get("dificultad", "medio")), int(datos.get("cantidad_jugadores", 1)))
         if nombre == "escena_campana":
             return EscenaCampana(self.entrada, str(datos.get("dificultad", "medio")), str(datos.get("iniciales", "AAA")))
         if nombre == "escena_vs":
-            return EscenaVs(self.entrada, str(datos.get("iniciales_j1", "AAA")), str(datos.get("iniciales_j2", "BBB")), str(datos.get("modo_vs", "clasico")))
+            return EscenaVs(self.entrada, str(datos.get("iniciales_j1", "AAA")), str(datos.get("iniciales_j2", "BBB")), str(datos.get("modo_vs", "clasico")), bool(datos.get("invencible_j1", False)), bool(datos.get("invencible_j2", False)))
         if nombre == "escena_fin_juego":
             return EscenaFinJuego(self.entrada, **datos)
         return EscenaMenu(self.entrada)

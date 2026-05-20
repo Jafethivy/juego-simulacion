@@ -22,7 +22,7 @@ from nucleo.ayudantes import aplicar_tinte, cargar_sprite_nave, reproducir_sonid
 class Nave:
     """Controla posición, vida, disparos e invulnerabilidad temporal."""
 
-    def __init__(self, jugador: int, color: tuple[int, int, int], limite_superior: int, limite_inferior: int, ancho_ventana: int = ANCHO) -> None:
+    def __init__(self, jugador: int, color: tuple[int, int, int], limite_superior: int, limite_inferior: int, ancho_ventana: int = ANCHO, invencible_permanente: bool = False) -> None:
         self.jugador = jugador
         self.color = color
         self.ancho_ventana = ancho_ventana
@@ -35,6 +35,7 @@ class Nave:
         self.es_invencible = False
         self.tiempo_invencible = 0.0
         self.esta_activa = True
+        self.invencible_permanente = invencible_permanente
         self.pos_x = float(MARGEN_NAVE)
         self.pos_y = float((limite_superior + limite_inferior - TAMANO_NAVE[1]) / 2)
         self.base = pygame.transform.smoothscale(cargar_sprite_nave(), TAMANO_NAVE)
@@ -109,7 +110,7 @@ class Nave:
         return Bala(salida_x, salida_y, self.color)
 
     def recibir_danio(self) -> None:
-        if self.es_invencible or not self.esta_activa:
+        if self.invencible_permanente or self.es_invencible or not self.esta_activa:
             return
         self.vidas -= 1
         self.es_invencible = True

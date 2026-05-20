@@ -1,50 +1,50 @@
 [
   {
-    "iniciales": "BBB",
+    "iniciales": "TKI",
     "modo": "vs",
     "categoria": "vs",
-    "resultado": "victoria_j2",
-    "puntaje": 370,
-    "fecha": "2026-05-20 07:04"
+    "resultado": "empate",
+    "puntaje": 890,
+    "fecha": "2026-05-20 09:17"
   },
   {
-    "iniciales": "SDD",
-    "modo": "campana",
-    "categoria": "campana",
-    "resultado": "derrota",
-    "puntaje": 280,
-    "fecha": "2026-05-19 23:29"
-  },
-  {
-    "iniciales": "NET",
+    "iniciales": "TKI",
     "modo": "vs",
     "categoria": "vs",
-    "resultado": "victoria_j1",
-    "puntaje": 270,
-    "fecha": "2026-05-20 08:06"
+    "resultado": "empate",
+    "puntaje": 750,
+    "fecha": "2026-05-20 09:19"
   },
   {
-    "iniciales": "NET",
-    "modo": "campana",
-    "categoria": "campana",
-    "resultado": "derrota",
-    "puntaje": 270,
-    "fecha": "2026-05-20 08:05"
-  },
-  {
-    "iniciales": "AAA",
+    "iniciales": "TKI",
     "modo": "vs",
     "categoria": "vs",
-    "resultado": "victoria_j2",
-    "puntaje": 270,
-    "fecha": "2026-05-20 07:04"
+    "resultado": "empate",
+    "puntaje": 665,
+    "fecha": "2026-05-20 09:15"
   },
   {
-    "iniciales": "ASD",
-    "modo": "campana",
-    "categoria": "campana",
-    "resultado": "derrota",
-    "puntaje": 235,
-    "fecha": "2026-05-20 07:15"
+    "iniciales": "TKI",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "empate",
+    "puntaje": 600,
+    "fecha": "2026-05-20 09:20"
+  },
+  {
+    "iniciales": "TKI",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "empate",
+    "puntaje": 585,
+    "fecha": "2026-05-20 09:16"
+  },
+  {
+    "iniciales": "TKI",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "empate",
+    "puntaje": 405,
+    "fecha": "2026-05-20 09:14"
   }
 ]
