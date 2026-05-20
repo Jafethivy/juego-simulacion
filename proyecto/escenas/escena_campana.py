@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+import math
+
 import pygame
 
 from configuracion import ALTO, ANCHO, COLORES, DIFICULTAD, PUNTOS_DESTRUIR, PUNTOS_ESQUIVAR, VIDAS_INICIALES, TAMANO_MINI_NAVE, TAMANO_SUBTITULO, TAMANO_NORMAL, TAMANO_PEQUENO, TAMANO_TITULO, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES, MARGEN_GENERAL, MARGEN_UI, ANCHO_MODAL_OPCIONES, ALTO_MODAL_OPCIONES, ALPHA_OVERLAY, SLIDER_ANCHO, SLIDER_ALTO, TAMANO_MANGO_SLIDER, ANCHO_BOTON_MODAL, ALTO_BOTON_MODAL
@@ -20,7 +22,7 @@ class EscenaCampana:
     def __init__(self, entrada, dificultad: str = "medio", iniciales: str = "AAA") -> None:
         self.entrada = entrada
         self.niveles = ["facil", "medio", "dificil"]
-        self.indice_nivel = self.niveles.index(dificultad)
+        self.indice_nivel = self.niveles.index(dificultad) if dificultad in self.niveles else 0
         self.iniciales = (iniciales or "AAA")[:3].upper()
         self.fuente_titulo = cargar_fuente(TAMANO_TITULO)
         self.fuente_subtitulo = cargar_fuente(TAMANO_SUBTITULO)
@@ -29,6 +31,9 @@ class EscenaCampana:
         self.resultado_final = None
         self._inicializar_nivel()
         self.modo_pausa = False
+        self.estado_transicion = None
+        self.tiempo_transicion = 0.0
+        self.duracion_transicion = 0.0
         self.subestado_opciones = "normal"
         self.volumen = 100
         self.ignorar_escape_una_vez = False
@@ -43,9 +48,12 @@ class EscenaCampana:
         self.dificultad_extra = 0
 
     def _inicializar_nivel(self) -> None:
+        puntaje_acumulado = getattr(self, "nave", None)
+        puntaje_acumulado = puntaje_acumulado.puntaje if puntaje_acumulado else 0
         nivel = self.niveles[self.indice_nivel]
         self.nivel_actual = nivel
         self.nave = Nave(1, COLORES["primario"], 0, ALTO)
+        self.nave.puntaje = puntaje_acumulado
         self.balas: list[Bala] = []
         self.meteoritos: list[Meteorito] = []
         self.explosiones: list[Explosion] = []
@@ -68,7 +76,19 @@ class EscenaCampana:
     def _crear_meteorito(self, datos: dict[str, float | int]) -> Meteorito:
         radio = int(datos["radio"])
         factor_velocidad = 1.35 if self.modo_infinito else 1.0
-        return Meteorito(ANCHO - radio, float(datos["y_relativo"]) * ALTO, -float(datos["vel_x"]) * factor_velocidad, float(datos["vel_y"]) * factor_velocidad, radio, int(datos["hp"]))
+        pos_x = ANCHO - radio
+        pos_y = float(datos["y_relativo"]) * ALTO
+        velocidad = float(datos["vel_x"]) * factor_velocidad
+        objetivo_x, objetivo_y = self.nave.rect.center
+        dx = objetivo_x - pos_x
+        dy = objetivo_y - pos_y
+        distancia = math.hypot(dx, dy)
+        if distancia <= 0.0:
+            vel_x, vel_y = -velocidad, 0.0
+        else:
+            vel_x = (dx / distancia) * velocidad
+            vel_y = (dy / distancia) * velocidad
+        return Meteorito(pos_x, pos_y, vel_x, vel_y, radio, int(datos["hp"]))
 
     def _actualizar_modo_accion(self) -> None:
         if self.enemigos_procesados > 0 and self.enemigos_procesados % 15 == 0 and self.enemigos_procesados != self.ultimo_cambio_modo:
@@ -101,6 +121,13 @@ class EscenaCampana:
             return ("escena_menu", {})
         self.subestado_opciones = "confirmar"
         return None
+
+    def _iniciar_transicion(self, estado: str, duracion: float) -> None:
+        self.estado_transicion = estado
+        self.tiempo_transicion = 0.0
+        self.duracion_transicion = duracion
+        self.modo_pausa = False
+        self.subestado_opciones = "normal"
 
     def _actualizar_opciones(self) -> str | tuple[str, dict[str, object]] | None:
         eventos = self.entrada.eventos
@@ -162,6 +189,24 @@ class EscenaCampana:
         return None
 
     def actualizar(self, dt: float):
+        if self.estado_transicion is not None:
+            self.tiempo_transicion += dt
+            if self.tiempo_transicion >= self.duracion_transicion:
+                estado = self.estado_transicion
+                self.estado_transicion = None
+                self.tiempo_transicion = 0.0
+                self.duracion_transicion = 0.0
+                if estado == "derrota":
+                    return ("escena_fin_juego", {
+                        "resultado": "derrota",
+                        "puntaje": self.nave.puntaje,
+                        "modo": "campana",
+                        "dificultad": self.nivel_actual,
+                        "iniciales": self.iniciales,
+                    })
+                self._avanzar_nivel_o_finalizar()
+            return None
+
         if self.modo_pausa:
             return self._actualizar_opciones()
 
@@ -242,18 +287,17 @@ class EscenaCampana:
                 self.meteoritos_generados += 1
                 self._actualizar_modo_accion()
                 if self.nave.vidas <= 0:
-                    return ("escena_fin_juego", {
-                        "resultado": "derrota",
-                        "puntaje": self.nave.puntaje,
-                        "modo": "campana",
-                        "dificultad": self.nivel_actual,
-                        "iniciales": self.iniciales,
-                    })
+                    self._iniciar_transicion("derrota", 1.35)
+                    return None
 
         self.explosiones = [explosion for explosion in self.explosiones if not explosion.termino()]
         self._actualizar_dificultad_por_puntaje()
         if not self.modo_infinito and self.meteoritos_generados >= self.objetivo_nivel:
-            return self._avanzar_nivel_o_finalizar()
+            if self.indice_nivel >= len(self.niveles) - 1:
+                self._iniciar_transicion("campana_completa", 2.1)
+            else:
+                self._iniciar_transicion("nivel_completado", 0.9)
+            return None
         return None
 
     def renderizar(self, pantalla: pygame.Surface) -> None:
@@ -266,29 +310,52 @@ class EscenaCampana:
             explosion.renderizar(pantalla)
         self.nave.renderizar(pantalla)
 
-        panel_opciones = pygame.Rect(ANCHO - ANCHO_BOTON_OPCIONES - MARGEN_GENERAL, MARGEN_GENERAL, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES)
+        panel_opciones = pygame.Rect(ANCHO - 160 - MARGEN_GENERAL, MARGEN_GENERAL, 160, ALTO_BOTON_OPCIONES)
         dibujar_boton_pequeno(pantalla, panel_opciones, "OPCIONES", self.fuente_pequena, False)
 
         titulo_nivel = "MODO INFINITO" if self.modo_infinito else f"NIVEL {self.indice_nivel + 1}/3 - {self.nivel_actual.upper()}"
-        dibujar_texto_ajustado(pantalla, titulo_nivel, 14, COLORES["neutro_claro"], (ANCHO // 2, MARGEN_GENERAL + 10), ANCHO - 180)
+        dibujar_texto_ajustado(pantalla, titulo_nivel, 14, COLORES["neutro_claro"], (ANCHO // 2, MARGEN_GENERAL + 8), ANCHO - 180)
         if self.modo_infinito:
             dibujar_texto_ajustado(
                 pantalla,
                 f"DESTRUIR +{PUNTOS_DESTRUIR} | ESQUIVAR +{PUNTOS_ESQUIVAR}",
                 10,
                 COLORES["acento"],
-                (ANCHO // 2, MARGEN_GENERAL + 40),
+                (ANCHO // 2, MARGEN_GENERAL + 34),
                 ANCHO - 180,
             )
-            dibujar_texto_ajustado(pantalla, f"DIFICULTAD {self.dificultad_extra}", 10, COLORES["neutro_claro"], (ANCHO // 2, MARGEN_GENERAL + 56), ANCHO - 180)
+            dibujar_texto_ajustado(pantalla, f"DIFICULTAD {self.dificultad_extra}", 10, COLORES["neutro_claro"], (ANCHO // 2, MARGEN_GENERAL + 50), ANCHO - 180)
+            dibujar_texto_ajustado(pantalla, f"OBJETIVO {self.modo_accion.upper()}", 11, COLORES["secundario"] if self.modo_accion == "destruir" else COLORES["primario"], (ANCHO // 2, MARGEN_GENERAL + 80), ANCHO - 180)
         else:
             dibujar_texto_ajustado(pantalla, f"PROGRESO {self.meteoritos_generados}/15", 14, COLORES["acento"], (ANCHO // 2, MARGEN_GENERAL + 32), ANCHO - 180)
-        dibujar_texto_ajustado(pantalla, f"OBJETIVO {self.modo_accion.upper()}", 11, COLORES["secundario"] if self.modo_accion == "destruir" else COLORES["primario"], (ANCHO // 2, MARGEN_GENERAL + 68), ANCHO - 180)
+            dibujar_texto_ajustado(pantalla, f"OBJETIVO {self.modo_accion.upper()}", 11, COLORES["secundario"] if self.modo_accion == "destruir" else COLORES["primario"], (ANCHO // 2, MARGEN_GENERAL + 58), ANCHO - 180)
 
         dibujar_texto(pantalla, f"SCORE {formatear_puntaje(self.nave.puntaje)}", self.fuente_normal, COLORES["blanco"], (MARGEN_GENERAL, MARGEN_GENERAL + 2))
         mini = crear_miniatura_nave(COLORES["primario"])
         for indice in range(self.nave.vidas):
             pantalla.blit(mini, (MARGEN_GENERAL + indice * 24, ALTO - 22))
+
+        if self.estado_transicion is not None:
+            overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 120))
+            pantalla.blit(overlay, (0, 0))
+            if self.estado_transicion == "derrota":
+                ajuste_y = 0
+                color = COLORES["peligro"]
+                mensaje = "DERROTA"
+                submensaje = "EL METEORITO TE ALCANZO"
+            elif self.estado_transicion == "campana_completa":
+                ajuste_y = -8
+                color = COLORES["acento"]
+                mensaje = f"FELICIDADES {self.iniciales}"
+                submensaje = "PASASTE EL MODO CAMPANA"
+            else:
+                ajuste_y = 0
+                color = COLORES["primario"]
+                mensaje = "NIVEL COMPLETADO"
+                submensaje = "PREPARANDO SIGUIENTE NIVEL"
+            ajustar_texto_centrado(pantalla, mensaje, self.fuente_titulo, color, ANCHO // 2, ALTO // 2 - 18 + ajuste_y)
+            ajustar_texto_centrado(pantalla, submensaje, self.fuente_subtitulo, COLORES["blanco"], ANCHO // 2, ALTO // 2 + 24 + ajuste_y)
 
         if self.modo_pausa:
             overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)

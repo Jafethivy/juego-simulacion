@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import pygame
 
 from configuracion import ALTO, ALTO_VISTA_VS, ANCHO, ANCHO_DIVISORIA_VS, ALPHA_OVERLAY, COLORES, PUNTOS_EMPATE, TAMANO_MINI_NAVE, TAMANO_NORMAL, TAMANO_PEQUENO, TAMANO_SUBTITULO, TAMANO_TITULO, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES, MARGEN_GENERAL, ANCHO_MODAL_OPCIONES, ALTO_MODAL_OPCIONES, SLIDER_ANCHO, SLIDER_ALTO, TAMANO_MANGO_SLIDER, ANCHO_BOTON_MODAL, ALTO_BOTON_MODAL
@@ -56,8 +58,31 @@ class EscenaVs:
         y_relativo = float(datos["y_relativo"])
         base_y = y_relativo * ALTO_VISTA_VS
         factor_velocidad = 1.4 if self.modo_vs == "infinito" else 1.0
-        self.meteoritos_j1.append(Meteorito(ANCHO - radio, base_y, -float(datos["vel_x"]) * factor_velocidad, float(datos["vel_y"]) * factor_velocidad, radio, int(datos["hp"])))
-        self.meteoritos_j2.append(Meteorito(ANCHO - radio, base_y, -float(datos["vel_x"]) * factor_velocidad, float(datos["vel_y"]) * factor_velocidad, radio, int(datos["hp"])))
+        pos_x = ANCHO - radio
+        velocidad = float(datos["vel_x"]) * factor_velocidad
+
+        objetivo_x_j1, objetivo_y_j1 = self.nave_j1.rect.center
+        dx_j1 = objetivo_x_j1 - pos_x
+        dy_j1 = objetivo_y_j1 - base_y
+        distancia_j1 = math.hypot(dx_j1, dy_j1)
+        if distancia_j1 <= 0.0:
+            vel_x_j1, vel_y_j1 = -velocidad, 0.0
+        else:
+            vel_x_j1 = (dx_j1 / distancia_j1) * velocidad
+            vel_y_j1 = (dy_j1 / distancia_j1) * velocidad
+
+        objetivo_x_j2, objetivo_y_j2 = self.nave_j2.rect.center
+        dx_j2 = objetivo_x_j2 - pos_x
+        dy_j2 = objetivo_y_j2 - base_y
+        distancia_j2 = math.hypot(dx_j2, dy_j2)
+        if distancia_j2 <= 0.0:
+            vel_x_j2, vel_y_j2 = -velocidad, 0.0
+        else:
+            vel_x_j2 = (dx_j2 / distancia_j2) * velocidad
+            vel_y_j2 = (dy_j2 / distancia_j2) * velocidad
+
+        self.meteoritos_j1.append(Meteorito(pos_x, base_y, vel_x_j1, vel_y_j1, radio, int(datos["hp"])))
+        self.meteoritos_j2.append(Meteorito(pos_x, base_y, vel_x_j2, vel_y_j2, radio, int(datos["hp"])))
 
     def _actualizar_mundo(self, nave: Nave, balas: list[Bala], meteoritos: list[Meteorito], explosiones: list[Explosion], dt: float, entrada) -> None:
         bala = nave.actualizar(dt, entrada)
@@ -209,7 +234,7 @@ class EscenaVs:
         self._dibujar_mundo(vista_j1, 0, self.nave_j1, self.balas_j1, self.meteoritos_j1, self.explosiones_j1, "JUGADOR 1", COLORES["primario"])
         self._dibujar_mundo(vista_j2, ALTO_VISTA_VS, self.nave_j2, self.balas_j2, self.meteoritos_j2, self.explosiones_j2, "JUGADOR 2", COLORES["secundario"])
         pygame.draw.rect(pantalla, COLORES["neutro_oscuro"], pygame.Rect(0, ALTO_VISTA_VS - 1, ANCHO, ANCHO_DIVISORIA_VS))
-        panel_opciones = pygame.Rect(ANCHO - ANCHO_BOTON_OPCIONES - MARGEN_GENERAL, MARGEN_GENERAL, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES)
+        panel_opciones = pygame.Rect(ANCHO - 180 - MARGEN_GENERAL, MARGEN_GENERAL, 180, ALTO_BOTON_OPCIONES)
         dibujar_boton_pequeno(pantalla, panel_opciones, "ESC OPCIONES", self.fuente_pequena, False)
 
         if self.modo_pausa:
