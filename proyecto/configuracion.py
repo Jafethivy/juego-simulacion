@@ -11,7 +11,7 @@ DT_MAXIMO = 0.05
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RUTA_ASSETS = os.path.join(BASE_DIR, "assets")
-RUTA_SPRITE_NAVE = os.path.join(RUTA_ASSETS, "nave.png")
+RUTA_SPRITE_NAVE = os.path.join(RUTA_ASSETS, "nave001.png")
 RUTA_FUENTE_RETRO = os.path.join(RUTA_ASSETS, "fuente_retro.ttf")
 RUTA_HISTORIAL_PUNTAJES = os.path.join(BASE_DIR, "historial_puntajes.json")
 
@@ -45,7 +45,7 @@ VIDAS_INICIALES = 3
 DURACION_NIVEL = 60
 TIEMPO_INVENCIBLE = 1.5
 
-TAMANO_NAVE = (60, 40)
+TAMANO_NAVE = (64, 32)
 TAMANO_BALA = (10, 4)
 TAMANO_MINI_NAVE = (20, 10)
 VELOCIDAD_NAVE = 250
