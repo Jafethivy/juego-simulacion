@@ -6,13 +6,12 @@ import math
 
 import pygame
 
-from configuracion import ALTO, ALTO_VISTA_VS, ANCHO, ANCHO_DIVISORIA_VS, ALPHA_OVERLAY, COLORES, ESTRELLAS_POR_CAPA, PUNTOS_EMPATE, TAMANO_NORMAL, TAMANO_PEQUENO, TAMANO_SUBTITULO, TAMANO_TITULO, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES, MARGEN_GENERAL, ANCHO_MODAL_OPCIONES, ALTO_MODAL_OPCIONES, SLIDER_ANCHO, SLIDER_ALTO, TAMANO_MANGO_SLIDER, ANCHO_BOTON_MODAL, ALTO_BOTON_MODAL, VELOCIDAD_ESTRELLAS
+from configuracion import ALTO, ALTO_VISTA_VS, ANCHO, ANCHO_DIVISORIA_VS, ALPHA_OVERLAY, COLORES, PUNTOS_EMPATE, TAMANO_NORMAL, TAMANO_PEQUENO, TAMANO_SUBTITULO, TAMANO_TITULO, ANCHO_BOTON_OPCIONES, ALTO_BOTON_OPCIONES, MARGEN_GENERAL, ANCHO_MODAL_OPCIONES, ALTO_MODAL_OPCIONES, SLIDER_ANCHO, SLIDER_ALTO, TAMANO_MANGO_SLIDER, ANCHO_BOTON_MODAL, ALTO_BOTON_MODAL
 from entidades.bala import Bala
 from entidades.explosion import Explosion
 from entidades.meteorito import Meteorito
 from entidades.nave import Nave
-from matematicas.probabilidad import entero_uniforme, muestra_uniforme
-from nucleo.ayudantes import ajustar_texto_centrado, cargar_fuente, crear_miniatura_nave, dibujar_boton_pequeno, dibujar_texto, dibujar_texto_ajustado, reproducir_musica, reproducir_sonido
+from nucleo.ayudantes import ajustar_texto_centrado, cargar_fuente, crear_estrellas, crear_miniatura_nave, dibujar_boton_pequeno, dibujar_estrellas, dibujar_texto, dibujar_texto_ajustado, reproducir_musica, reproducir_sonido, actualizar_estrellas
 from nucleo.generador_oleada import GeneradorOleada
 from nucleo.manejador_colisiones import hay_colision
 from nucleo.manejador_puntaje import formatear_puntaje, sumar_por_destruccion, sumar_por_esquivar
@@ -21,7 +20,7 @@ from nucleo.manejador_puntaje import formatear_puntaje, sumar_por_destruccion, s
 class EscenaVs:
     """Muestra dos batallas paralelas con meteoritos sincronizados."""
 
-    def __init__(self, entrada, iniciales_j1: str = "AAA", iniciales_j2: str = "BBB", modo_vs: str = "clasico") -> None:
+    def __init__(self, entrada, iniciales_j1: str = "AAA", iniciales_j2: str = "BBB", modo_vs: str = "clasico", invencible_j1: bool = False, invencible_j2: bool = False) -> None:
         self.entrada = entrada
         self.iniciales_j1 = (iniciales_j1 or "AAA")[:3].upper()
         self.iniciales_j2 = (iniciales_j2 or "BBB")[:3].upper()
@@ -30,8 +29,8 @@ class EscenaVs:
         self.fuente_subtitulo = cargar_fuente(TAMANO_SUBTITULO)
         self.fuente_normal = cargar_fuente(TAMANO_NORMAL)
         self.fuente_pequena = cargar_fuente(TAMANO_PEQUENO)
-        self.nave_j1 = Nave(1, COLORES["primario"], 0, ALTO_VISTA_VS)
-        self.nave_j2 = Nave(2, COLORES["secundario"], 0, ALTO_VISTA_VS)
+        self.nave_j1 = Nave(1, COLORES["primario"], 0, ALTO_VISTA_VS, invencible_permanente=invencible_j1)
+        self.nave_j2 = Nave(2, COLORES["secundario"], 0, ALTO_VISTA_VS, invencible_permanente=invencible_j2)
         self.balas_j1: list[Bala] = []
         self.balas_j2: list[Bala] = []
         self.meteoritos_j1: list[Meteorito] = []
@@ -41,7 +40,9 @@ class EscenaVs:
         self.generador = GeneradorOleada("medio", ANCHO, ALTO_VISTA_VS)
         if self.modo_vs == "infinito":
             self.generador.siguiente_spawn = 0.30
-        self.estrellas = self._crear_estrellas()
+        elif self.modo_vs == "imposible":
+            self.generador.siguiente_spawn = 0.06
+        self.estrellas = crear_estrellas()
         self.tiempo_parpadeo = 0.0
         self.modo_pausa = False
         self.subestado_opciones = "normal"
@@ -49,17 +50,6 @@ class EscenaVs:
         self.ignorar_escape_una_vez = False
         reproducir_musica("musica_vs", 0.55)
 
-    def _crear_estrellas(self) -> list[dict[str, float | int]]:
-        estrellas: list[dict[str, float | int]] = []
-        for indice, cantidad in enumerate(ESTRELLAS_POR_CAPA):
-            for _ in range(cantidad):
-                estrellas.append({
-                    "x": muestra_uniforme(0, ANCHO),
-                    "y": muestra_uniforme(0, ALTO),
-                    "tamano": entero_uniforme(1, 2),
-                    "velocidad": VELOCIDAD_ESTRELLAS[indice],
-                })
-        return estrellas
 
     def manejar_escape(self):
         if self.modo_pausa and self.subestado_opciones == "confirmar":
@@ -73,7 +63,7 @@ class EscenaVs:
         radio = int(datos["radio"])
         y_relativo = float(datos["y_relativo"])
         base_y = y_relativo * ALTO_VISTA_VS
-        factor_velocidad = 1.4 if self.modo_vs == "infinito" else 1.0
+        factor_velocidad = 2.8 if self.modo_vs == "imposible" else 1.4 if self.modo_vs == "infinito" else 1.0
         pos_x = ANCHO - radio
         velocidad = float(datos["vel_x"]) * factor_velocidad
 
@@ -97,10 +87,16 @@ class EscenaVs:
             vel_x_j2 = (dx_j2 / distancia_j2) * velocidad
             vel_y_j2 = (dy_j2 / distancia_j2) * velocidad
 
-        self.meteoritos_j1.append(Meteorito(pos_x, base_y, vel_x_j1, vel_y_j1, radio, int(datos["hp"])))
-        self.meteoritos_j2.append(Meteorito(pos_x, base_y, vel_x_j2, vel_y_j2, radio, int(datos["hp"])))
+        if self.nave_j1.esta_activa:
+            self.meteoritos_j1.append(Meteorito(pos_x, base_y, vel_x_j1, vel_y_j1, radio, int(datos["hp"])))
+        if self.nave_j2.esta_activa:
+            self.meteoritos_j2.append(Meteorito(pos_x, base_y, vel_x_j2, vel_y_j2, radio, int(datos["hp"])))
 
     def _actualizar_mundo(self, nave: Nave, balas: list[Bala], meteoritos: list[Meteorito], explosiones: list[Explosion], dt: float, entrada) -> None:
+        if not nave.esta_activa:
+            for explosion in explosiones:
+                explosion.actualizar(dt)
+            return
         bala = nave.actualizar(dt, entrada)
         if bala is not None:
             balas.append(bala)
@@ -113,6 +109,8 @@ class EscenaVs:
             explosion.actualizar(dt)
 
     def _resolver_colisiones(self, nave: Nave, balas: list[Bala], meteoritos: list[Meteorito], explosiones: list[Explosion]) -> tuple[list[Bala], list[Meteorito], list[Explosion], bool]:
+        if not nave.esta_activa:
+            return balas, meteoritos, explosiones, False
         nave_danio = False
 
         # Rastreamos qué meteoritos y balas participaron en una colisión
@@ -208,18 +206,16 @@ class EscenaVs:
             return self._actualizar_opciones()
 
         self.tiempo_parpadeo += dt
-        for estrella in self.estrellas:
-            estrella["x"] = float(estrella["x"]) - float(estrella["velocidad"]) * dt
-            if float(estrella["x"]) < 0:
-                estrella["x"] = ANCHO + muestra_uniforme(0, 40)
-                estrella["y"] = muestra_uniforme(0, ALTO)
-                estrella["tamano"] = entero_uniforme(1, 2)
+        actualizar_estrellas(self.estrellas, dt)
 
         for dato in self.generador.actualizar(dt):
             self._crear_meteoritos_compartidos(dato)
         if self.modo_vs == "infinito":
             if self.generador.siguiente_spawn > 0.16:
                 self.generador.siguiente_spawn = max(0.16, self.generador.siguiente_spawn * 0.995)
+        elif self.modo_vs == "imposible":
+            if self.generador.siguiente_spawn > 0.012:
+                self.generador.siguiente_spawn = max(0.012, self.generador.siguiente_spawn * 0.940)
 
         self._actualizar_mundo(self.nave_j1, self.balas_j1, self.meteoritos_j1, self.explosiones_j1, dt, self.entrada)
         self._actualizar_mundo(self.nave_j2, self.balas_j2, self.meteoritos_j2, self.explosiones_j2, dt, self.entrada)
@@ -227,24 +223,19 @@ class EscenaVs:
         self.balas_j1, self.meteoritos_j1, self.explosiones_j1, _ = self._resolver_colisiones(self.nave_j1, self.balas_j1, self.meteoritos_j1, self.explosiones_j1)
         self.balas_j2, self.meteoritos_j2, self.explosiones_j2, _ = self._resolver_colisiones(self.nave_j2, self.balas_j2, self.meteoritos_j2, self.explosiones_j2)
 
-        if self.nave_j1.vidas <= 0 and self.nave_j2.vidas <= 0:
-            return ("escena_fin_juego", {"resultado": "empate", "puntaje_j1": self.nave_j1.puntaje, "puntaje_j2": self.nave_j2.puntaje, "modo": "vs", "iniciales_j1": self.iniciales_j1, "iniciales_j2": self.iniciales_j2})
-        if self.nave_j1.vidas <= 0:
-            return ("escena_fin_juego", {"resultado": "victoria_j2", "puntaje_j1": self.nave_j1.puntaje, "puntaje_j2": self.nave_j2.puntaje, "modo": "vs", "iniciales_j1": self.iniciales_j1, "iniciales_j2": self.iniciales_j2})
-        if self.nave_j2.vidas <= 0:
-            return ("escena_fin_juego", {"resultado": "victoria_j1", "puntaje_j1": self.nave_j1.puntaje, "puntaje_j2": self.nave_j2.puntaje, "modo": "vs", "iniciales_j1": self.iniciales_j1, "iniciales_j2": self.iniciales_j2})
-
-        if self.nave_j1.puntaje >= PUNTOS_EMPATE and self.nave_j2.puntaje >= PUNTOS_EMPATE:
-            return ("escena_fin_juego", {"resultado": "empate", "puntaje_j1": self.nave_j1.puntaje, "puntaje_j2": self.nave_j2.puntaje, "modo": "vs", "iniciales_j1": self.iniciales_j1, "iniciales_j2": self.iniciales_j2})
+        if not self.nave_j1.esta_activa and not self.nave_j2.esta_activa:
+            if self.nave_j1.puntaje > self.nave_j2.puntaje:
+                resultado = "victoria_j1"
+            elif self.nave_j2.puntaje > self.nave_j1.puntaje:
+                resultado = "victoria_j2"
+            else:
+                resultado = "empate"
+            return ("escena_fin_juego", {"resultado": resultado, "puntaje_j1": self.nave_j1.puntaje, "puntaje_j2": self.nave_j2.puntaje, "modo": "vs", "iniciales_j1": self.iniciales_j1, "iniciales_j2": self.iniciales_j2})
         return None
 
     def _dibujar_mundo(self, vista: pygame.Surface, desplazamiento_y: int, nave: Nave, balas: list[Bala], meteoritos: list[Meteorito], explosiones: list[Explosion], etiqueta: str, color_nave: tuple[int, int, int]) -> None:
         vista.fill(COLORES["fondo"])
-        for estrella in self.estrellas:
-            if desplazamiento_y <= int(estrella["y"]) < desplazamiento_y + vista.get_height():
-                tamano = int(estrella["tamano"])
-                brillo = COLORES["blanco"] if tamano == 2 else COLORES["neutro_claro"]
-                pygame.draw.rect(vista, brillo, pygame.Rect(int(estrella["x"]), int(estrella["y"]) - desplazamiento_y, tamano, tamano))
+        dibujar_estrellas(vista, self.estrellas, desplazamiento_y, vista.get_height())
         for meteorito in meteoritos:
             meteorito.renderizar(vista)
         for bala in balas:

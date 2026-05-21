@@ -53,9 +53,6 @@ class EscenaFinJuego:
         return "escena_menu"
 
     def actualizar(self, dt: float):
-        if self.entrada.recien_presionada(pygame.K_SPACE):
-            self._detener_resultado()
-            return "escena_menu"
         if self.entrada.recien_presionada(pygame.K_LEFT):
             self.seleccion = max(0, self.seleccion - 1)
         if self.entrada.recien_presionada(pygame.K_RIGHT):
@@ -101,3 +98,5 @@ class EscenaFinJuego:
         boton_menu = pygame.Rect(ANCHO // 2 + 12, 300, 170, 48)
         dibujar_boton(pantalla, boton_reintentar, "REINTENTAR", self.fuente_normal, self.seleccion == 0)
         dibujar_boton(pantalla, boton_menu, "MENÚ", self.fuente_normal, self.seleccion == 1)
+        dibujar_texto_centrado = ajustar_texto_centrado
+        dibujar_texto_centrado(pantalla, "ENTER PARA CONTINUAR", self.fuente_normal, COLORES["neutro_medio"], ANCHO // 2, 392)
