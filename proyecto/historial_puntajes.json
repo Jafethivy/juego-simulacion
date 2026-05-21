@@ -1,5 +1,13 @@
 [
   {
+    "iniciales": "SSK",
+    "modo": "campana",
+    "categoria": "campana",
+    "resultado": "derrota",
+    "puntaje": 235,
+    "fecha": "2026-05-20 10:37"
+  },
+  {
     "iniciales": "IVT",
     "modo": "campana",
     "categoria": "campana",
@@ -16,6 +24,14 @@
     "fecha": "2026-05-19 18:52"
   },
   {
+    "iniciales": "ASD",
+    "modo": "vs",
+    "categoria": "vs",
+    "resultado": "victoria_j2",
+    "puntaje": 50,
+    "fecha": "2026-05-19 23:17"
+  },
+  {
     "iniciales": "IVT",
     "modo": "campana",
     "categoria": "campana",
@@ -30,21 +46,5 @@
     "resultado": "victoria_j2",
     "puntaje": 20,
     "fecha": "2026-05-19 18:43"
-  },
-  {
-    "iniciales": "IVT",
-    "modo": "vs",
-    "categoria": "vs",
-    "resultado": "victoria_j2",
-    "puntaje": 20,
-    "fecha": "2026-05-19 18:43"
-  },
-  {
-    "iniciales": "IVT",
-    "modo": "vs",
-    "categoria": "vs",
-    "resultado": "victoria_j1",
-    "puntaje": 15,
-    "fecha": "2026-05-19 19:02"
   }
 ]
